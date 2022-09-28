@@ -1,0 +1,45 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: manager-role
+rules:
+- apiGroups:
+  - random.superorbital.io
+  resources:
+  - configmaps
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - random.superorbital.io
+  resources:
+  - randomnumbers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - random.superorbital.io
+  resources:
+  - randomnumbers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - random.superorbital.io
+  resources:
+  - randomnumbers/status
+  verbs:
+  - get
+  - patch
+  - update

@@ -1,0 +1,16 @@
+domain: superorbital.io
+layout:
+- go.kubebuilder.io/v4-alpha
+projectName: random-number-controller
+repo: github.com/superorbital/random-number-controller
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: superorbital.io
+  group: random
+  kind: RandomNumber
+  path: github.com/superorbital/random-number-controller/api/v1
+  version: v1
+version: "3"

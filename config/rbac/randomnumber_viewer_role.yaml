@@ -1,0 +1,27 @@
+# permissions for end users to view randomnumbers.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: randomnumber-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: random-number-controller
+    app.kubernetes.io/part-of: random-number-controller
+    app.kubernetes.io/managed-by: kustomize
+  name: randomnumber-viewer-role
+rules:
+- apiGroups:
+  - random.superorbital.io
+  resources:
+  - randomnumbers
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - random.superorbital.io
+  resources:
+  - randomnumbers/status
+  verbs:
+  - get
