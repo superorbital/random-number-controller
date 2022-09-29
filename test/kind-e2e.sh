@@ -21,6 +21,8 @@ cleanup() {
   kind delete cluster \
     --verbosity=${KIND_LOG_LEVEL} \
     --name ${KIND_CLUSTER_NAME}
+
+  git restore ${DIR}/../config/manager/kustomization.yaml
 }
 
 trap cleanup EXIT
@@ -38,7 +40,9 @@ export KUBECONFIG="${KUBECONFIG:-$HOME/.kube/kind-config-$KIND_CLUSTER_NAME}"
 if [ "${SKIP_CLUSTER_CREATION:-false}" = "false" ]; then
   echo "[dev-env] creating Kubernetes cluster with kind"
 
-  export K8S_VERSION=${K8S_VERSION:-v1.21.10@sha256:84709f09756ba4f863769bdcabe5edafc2ada72d3c8c44d6515fc581b66b029c}
+  # find image tags at
+  # https://github.com/kubernetes-sigs/kind/releases
+  export K8S_VERSION=${K8S_VERSION:-v1.24.6@sha256:97e8d00bc37a7598a0b32d1fabd155a96355c49fa0d4d4790aab0f161bf31be1}
 
   kind create cluster \
     --verbosity=${KIND_LOG_LEVEL} \
@@ -57,9 +61,13 @@ export IMG=controller:kind-e2e
 make -C ${DIR}/.. docker-build
 make -C ${DIR}/.. install
 
+KIND_WORKERS=$(kind get nodes --name="${KIND_CLUSTER_NAME}" | grep worker | awk '{printf (NR>1?",":"") $1}')
+
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${IMG}
 
 make -C ${DIR}/.. deploy
+
+kubectl rollout status -n random-number-controller-system deploy/random-number-controller-controller-manager --timeout=60s
 
 make -C ${DIR}/.. e2e-test
 
