@@ -9,4 +9,4 @@ metadata:
     app.kubernetes.io/created-by: random-number-controller
   name: randomnumber-sample
 spec:
-  # TODO(user): Add fields here
+  entropy: 2

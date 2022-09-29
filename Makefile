@@ -98,8 +98,8 @@ docker-buildx: test ## Build and push docker image for the manager for cross-pla
 
 ##@ Deployment
 
-ifndef ignore-not-found
-  ignore-not-found = false
+ifndef IGNORE_NOT_FOUND
+  IGNORE_NOT_FOUND = false
 endif
 
 .PHONY: install
@@ -107,8 +107,8 @@ install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~
 	$(KUSTOMIZE) build config/crd | kubectl apply -f -
 
 .PHONY: uninstall
-uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
-	$(KUSTOMIZE) build config/crd | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
+uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with IGNORE_NOT_FOUND=true to ignore resource not found errors during deletion.
+	$(KUSTOMIZE) build config/crd | kubectl delete --ignore-not-found=$(IGNORE_NOT_FOUND) -f -
 
 .PHONY: deploy
 deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
@@ -116,8 +116,8 @@ deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
 .PHONY: undeploy
-undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
-	$(KUSTOMIZE) build config/default | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
+undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with IGNORE_NOT_FOUND=true to ignore resource not found errors during deletion.
+	$(KUSTOMIZE) build config/default | kubectl delete --ignore-not-found=$(IGNORE_NOT_FOUND) -f -
 
 ##@ Build Dependencies
 
@@ -150,3 +150,16 @@ $(CONTROLLER_GEN): $(LOCALBIN)
 envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
 $(ENVTEST): $(LOCALBIN)
 	test -s $(LOCALBIN)/setup-envtest || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+
+
+.PHONY: e2e-test
+e2e-test:  ## Run e2e tests (expects access to a working Kubernetes cluster). Expects KUBECONFIG to be available with running controller
+	go test -tags=e2e ./test/e2e/... -coverprofile cover.out
+
+.PHONY: colima-e2e
+colima-e2e: ## Run e2e tests in a local colima environment
+	@test/colima-e2e.sh
+
+.PHONY: kind-e2e
+kind-e2e: ## Run e2e tests in a local kind environment
+	@test/kind-e2e.sh

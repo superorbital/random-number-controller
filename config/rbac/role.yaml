@@ -6,7 +6,7 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - random.superorbital.io
+  - ""
   resources:
   - configmaps
   verbs:

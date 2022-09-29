@@ -1,9 +1,16 @@
 #!/bin/bash
 
 set -o errexit
-set -o nounset
 set -o pipefail
 
+KIND_LOG_LEVEL="1"
+
+if ! [ -z $DEBUG ]; then
+  set -x
+  KIND_LOG_LEVEL="6"
+fi
+
+set -o nounset
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 cleanup() {
@@ -17,3 +24,45 @@ cleanup() {
 }
 
 trap cleanup EXIT
+
+export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-random-number-controller}
+
+if ! command -v kind --version &> /dev/null; then
+  echo "kind is not installed. Use the package manager or visit the official site https://kind.sigs.k8s.io/"
+  exit 1
+fi
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+export KUBECONFIG="${KUBECONFIG:-$HOME/.kube/kind-config-$KIND_CLUSTER_NAME}"
+
+if [ "${SKIP_CLUSTER_CREATION:-false}" = "false" ]; then
+  echo "[dev-env] creating Kubernetes cluster with kind"
+
+  export K8S_VERSION=${K8S_VERSION:-v1.21.10@sha256:84709f09756ba4f863769bdcabe5edafc2ada72d3c8c44d6515fc581b66b029c}
+
+  kind create cluster \
+    --verbosity=${KIND_LOG_LEVEL} \
+    --name ${KIND_CLUSTER_NAME} \
+    --config ${DIR}/kind.yaml \
+    --retain \
+    --image "kindest/node:${K8S_VERSION}"
+
+  echo "Kubernetes cluster:"
+  kubectl get nodes -o wide
+fi
+
+
+export IMG=controller:kind-e2e
+
+make -C ${DIR}/.. docker-build
+make -C ${DIR}/.. install
+
+kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${IMG}
+
+make -C ${DIR}/.. deploy
+
+make -C ${DIR}/.. e2e-test
+
+make -C ${DIR}/.. undeploy
+
+IGNORE_NOT_FOUND=true make -C ${DIR}/.. uninstall
