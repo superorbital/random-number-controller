@@ -46,8 +46,7 @@ type RandomNumberReconciler struct {
 //+kubebuilder:rbac:groups=random.superorbital.io,resources=randomnumbers/finalizers,verbs=update
 //+kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch;create;update;patch;delete
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
+// Reconcile creates a random configmap from a RandomNumber
 func (r *RandomNumberReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 	var rn randomv1.RandomNumber
